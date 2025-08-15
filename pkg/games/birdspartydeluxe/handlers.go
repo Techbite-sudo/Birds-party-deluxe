@@ -67,15 +67,22 @@ func (rg *RouteGroup) SpinHandler(c *fiber.Ctx) error {
 	allConnections := FindAllConnections(req.GameState.Grid, req.GameState.CurrentLevel)
 	cloverConnections, birdConnections := SeparateConnections(allConnections)
 
-	// DELUXE: Process clover connections first - they upgrade multiplier
-	for _, cloverConnection := range cloverConnections {
+	// DELUXE: Process clover connections first - they upgrade multiplier AND pay out
+	totalWinnings := 0.0
+	for i, cloverConnection := range cloverConnections {
+		// Upgrade multiplier first
 		UpgradeBoomingReels(&req.GameState)
 		log.Printf("Clover connection found (%d symbols), multiplier upgraded to %.1fx", 
 			cloverConnection.Count, req.GameState.FreeSpins.CurrentMultiplier)
+		
+		// Calculate clover payout using the NEW upgraded multiplier
+		payout := calculatePayout(cloverConnection.Symbol, cloverConnection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
+		payout *= req.GameState.FreeSpins.CurrentMultiplier
+		cloverConnections[i].Payout = payout
+		totalWinnings += payout
 	}
 
 	// Calculate total winnings from bird connections using current multiplier
-	totalWinnings := 0.0
 	for i, connection := range birdConnections {
 		payout := calculatePayout(connection.Symbol, connection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
 		// Apply booming reels multiplier
@@ -85,8 +92,9 @@ func (rg *RouteGroup) SpinHandler(c *fiber.Ctx) error {
 	}
 	totalWinnings = round(totalWinnings)
 
-	// Get RTP and call RNG for bird symbol connections only (clovers don't count for RNG)
-	if len(birdConnections) > 0 {
+	// Get RTP and call RNG for ALL paying connections (birds + clovers)
+	allPayingConnections := append(cloverConnections, birdConnections...)
+	if len(allPayingConnections) > 0 {
 		rtp, err := settingsClient.GetRTP(req.ClientID, req.GameID, req.PlayerID)
 		if err != nil {
 			log.Printf("Failed to get RTP: %v", err)
@@ -276,15 +284,22 @@ func (rg *RouteGroup) ProcessStageClearedHandler(c *fiber.Ctx) error {
 			stageClearedSymbolsAfterLevelUp := FindStageClearedSymbols(req.GameState.Grid, req.GameState.CurrentLevel)
 			req.GameState.StageClearedSymbols = stageClearedSymbolsAfterLevelUp
 
-			// DELUXE: Process clover connections first - upgrade multiplier
-			for _, cloverConnection := range cloverConnections {
+			// DELUXE: Process clover connections first - upgrade multiplier AND pay out
+			totalWinnings := 0.0
+			for i, cloverConnection := range cloverConnections {
+				// Upgrade multiplier first
 				UpgradeBoomingReels(&req.GameState)
 				log.Printf("Clover connection found on new level (%d symbols), multiplier upgraded to %.1fx", 
 					cloverConnection.Count, req.GameState.FreeSpins.CurrentMultiplier)
+				
+				// Calculate clover payout using the NEW upgraded multiplier
+				payout := calculatePayout(cloverConnection.Symbol, cloverConnection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
+				payout *= req.GameState.FreeSpins.CurrentMultiplier
+				cloverConnections[i].Payout = payout
+				totalWinnings += payout
 			}
 
 			// Calculate winnings from bird connections using current multiplier
-			totalWinnings := 0.0
 			for i, connection := range birdConnections {
 				payout := calculatePayout(connection.Symbol, connection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
 				payout *= req.GameState.FreeSpins.CurrentMultiplier
@@ -327,15 +342,22 @@ func (rg *RouteGroup) ProcessStageClearedHandler(c *fiber.Ctx) error {
 	allConnections := FindAllConnections(req.GameState.Grid, req.GameState.CurrentLevel)
 	cloverConnections, birdConnections := SeparateConnections(allConnections)
 
-	// DELUXE: Process clover connections first - upgrade multiplier
-	for _, cloverConnection := range cloverConnections {
+	// DELUXE: Process clover connections first - upgrade multiplier AND pay out
+	totalWinnings := 0.0
+	for i, cloverConnection := range cloverConnections {
+		// Upgrade multiplier first
 		UpgradeBoomingReels(&req.GameState)
 		log.Printf("Clover connection found after stage-cleared processing (%d symbols), multiplier upgraded to %.1fx", 
 			cloverConnection.Count, req.GameState.FreeSpins.CurrentMultiplier)
+		
+		// Calculate clover payout using the NEW upgraded multiplier
+		payout := calculatePayout(cloverConnection.Symbol, cloverConnection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
+		payout *= req.GameState.FreeSpins.CurrentMultiplier
+		cloverConnections[i].Payout = payout
+		totalWinnings += payout
 	}
 
 	// Calculate total winnings from bird connections using current multiplier
-	totalWinnings := 0.0
 	for i, connection := range birdConnections {
 		payout := calculatePayout(connection.Symbol, connection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
 		payout *= req.GameState.FreeSpins.CurrentMultiplier
@@ -344,9 +366,10 @@ func (rg *RouteGroup) ProcessStageClearedHandler(c *fiber.Ctx) error {
 	}
 	totalWinnings = round(totalWinnings)
 
-	// Handle RNG for bird symbol connections only (if any) with surgical loss approach
+	// Handle RNG for ALL paying connections (birds + clovers) with surgical loss approach
 	rngBypassed := false
-	if len(birdConnections) > 0 {
+	allPayingConnections := append(cloverConnections, birdConnections...)
+	if len(allPayingConnections) > 0 {
 		rtp, err := settingsClient.GetRTP(req.ClientID, req.GameID, req.PlayerID)
 		if err != nil {
 			log.Printf("Failed to get RTP: %v", err)
@@ -386,10 +409,11 @@ func (rg *RouteGroup) ProcessStageClearedHandler(c *fiber.Ctx) error {
 				// Keep the original connections and winnings
 				// Grid remains as it is after stage-cleared processing
 			} else {
-				// Surgical loss successful - remove bird connections but keep clover effects
+				// Surgical loss successful - remove ALL paying connections but keep multiplier upgrades
+				cloverConnections = nil
 				birdConnections = nil
 				totalWinnings = 0
-				log.Printf("Surgical loss applied successfully after stage-cleared processing (birds only)")
+				log.Printf("Surgical loss applied successfully after stage-cleared processing (all paying connections)")
 			}
 		}
 	}
@@ -506,15 +530,22 @@ func (rg *RouteGroup) CascadeHandler(c *fiber.Ctx) error {
 	// DELUXE: Separate clover and bird connections
 	cloverConnections, birdConnections = SeparateConnections(allConnections)
 
-	// DELUXE: Process clover connections first - upgrade multiplier
-	for _, cloverConnection := range cloverConnections {
+	// DELUXE: Process clover connections first - upgrade multiplier AND pay out
+	totalWinnings = 0.0
+	for i, cloverConnection := range cloverConnections {
+		// Upgrade multiplier first
 		UpgradeBoomingReels(&req.GameState)
 		log.Printf("Clover connection found in cascade (%d symbols), multiplier upgraded to %.1fx", 
 			cloverConnection.Count, req.GameState.FreeSpins.CurrentMultiplier)
+		
+		// Calculate clover payout using the NEW upgraded multiplier
+		payout := calculatePayout(cloverConnection.Symbol, cloverConnection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
+		payout *= req.GameState.FreeSpins.CurrentMultiplier
+		cloverConnections[i].Payout = payout
+		totalWinnings += payout
 	}
 
 	// Calculate total winnings from bird connections using current multiplier
-	totalWinnings = 0.0
 	for i, connection := range birdConnections {
 		payout := calculatePayout(connection.Symbol, connection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
 		payout *= req.GameState.FreeSpins.CurrentMultiplier
@@ -523,9 +554,10 @@ func (rg *RouteGroup) CascadeHandler(c *fiber.Ctx) error {
 	}
 	totalWinnings = round(totalWinnings)
 
-	// Handle RNG for bird symbol connections only with surgical loss approach
+	// Handle RNG for ALL paying connections (birds + clovers) with surgical loss approach
 	rngBypassed := false
-	if len(birdConnections) > 0 {
+	allPayingConnections := append(cloverConnections, birdConnections...)
+	if len(allPayingConnections) > 0 {
 		rtp, err := settingsClient.GetRTP(req.ClientID, req.GameID, req.PlayerID)
 		if err != nil {
 			log.Printf("Failed to get RTP: %v", err)
@@ -568,10 +600,11 @@ func (rg *RouteGroup) CascadeHandler(c *fiber.Ctx) error {
 				// Keep the original connections and winnings
 				// Grid remains as it is after cascade processing
 			} else {
-				// Surgical loss successful - remove bird connections but keep clover effects
+				// Surgical loss successful - remove ALL paying connections but keep multiplier upgrades
+				cloverConnections = nil
 				birdConnections = nil
 				totalWinnings = 0
-				log.Printf("Surgical loss applied successfully after cascade processing (birds only)")
+				log.Printf("Surgical loss applied successfully after cascade processing (all paying connections)")
 			}
 		}
 	}

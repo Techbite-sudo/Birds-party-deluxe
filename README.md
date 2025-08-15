@@ -28,12 +28,11 @@ This document provides comprehensive guidelines for integrating the Birds Party 
 ### Symbols
 
 #### Regular Bird Symbols (Form Connections)
-- Purple Owl, Green Owl, Yellow Owl, Blue Owl, Red Owl (23.75% each)
+- Purple Owl, Green Owl, Yellow Owl, Blue Owl, Red Owl, **Four-leaf Clover** (19% each)
 - **Connection-forming symbols** that create clusters and award payouts
 
-#### Special Symbols (DELUXE: Two Separate Types)
-- **Rainbow Egg (`free_game`)** - Triggers 10 free spins (5% probability)
-- **Four-leaf Clover (`clover`)** - Connection-based booming reels multiplier (5% probability)
+#### Special Symbols (DELUXE: Rainbow Egg Only)
+- **Rainbow Egg (`free_game`)** - Triggers 10 free spins (1% probability)
 
 #### Stage-Cleared Symbols (Priority Removal)
 - **Level 1**: `orange_slice` - Orange slice symbol (5% probability on 4x4 grid)
@@ -46,22 +45,19 @@ This document provides comprehensive guidelines for integrating the Birds Party 
 
 #### How Clovers Work
 1. **Clovers form connections** like regular bird symbols (minimum 4/5/6 depending on level)
-2. **When clovers form valid connections**, they are removed from the grid
-3. **Each clover connection upgrades** the booming reels multiplier:
-   - 1st clover connection → X2 multiplier
-   - 2nd clover connection → X3 multiplier  
-   - 3rd clover connection → X4 multiplier
-   - 4th clover connection → X5 multiplier
-   - 5th clover connection → X10 multiplier (maximum)
-4. **Bird connections use current multiplier** for payout calculation
-5. **Multiplier resets** when cascade sequence ends (no more connections)
+2. **When clovers form valid connections**:
+   - They **upgrade the booming reels multiplier** (1x → 2x → 3x → 4x → 5x → 10x)
+   - They **pay out according to paytable** (same as Purple Owl payouts)
+   - Their **payout uses the NEW upgraded multiplier**
+3. **Subsequent bird connections** in the same cascade sequence use the upgraded multiplier
+4. **Multiplier resets** when cascade sequence ends (no more connections)
 
 #### Multiplier Progression Example
 ```
 Initial: 1x multiplier
-Clover connection found → Upgrade to 2x
-Bird connection pays: base_payout × 2x
-Another clover connection → Upgrade to 3x  
+Clover connection found (4 symbols) → Upgrade to 2x → Clover pays: base_payout × 2x
+Bird connection found (5 symbols) → Bird pays: base_payout × 2x  
+Another clover connection → Upgrade to 3x → Clover pays: base_payout × 3x
 Bird connection pays: base_payout × 3x
 No more connections → Reset to 1x for next spin
 ```
@@ -118,21 +114,21 @@ No more connections → Reset to 1x for next spin
 - **Removes all stage-cleared symbols** from grid
 - **Applies gravity** and fills with new symbols
 - **Updates stage progress** count and checks for level advancement
-- **Processes new clover connections** → upgrades multiplier
+- **Processes new clover connections** → upgrades multiplier AND pays out
 - **Checks for NEW bird connections** → applies multiplier to payouts
-- **RNG validates new bird connections** and sets cascading flag
+- **RNG validates new paying connections** and sets cascading flag
 - Returns updated grid with potential new connections
 
 #### 3. Cascade Phase - `/cascade/birdspartydeluxe`
 - **Processes connection-forming symbols** from previous steps
-- **Processes clover connections first** → upgrades multiplier
+- **Processes clover connections first** → upgrades multiplier AND pays out
 - **Processes bird connections** → applies current multiplier
 - **ENHANCED**: Detects stage-cleared symbols that appear after gravity
 - **Handles cascading mechanics** (remove → gravity → find new connections)
 - **Resets multiplier** when no more connections exist (cascade sequence ends)
 - **Returns stage-cleared detection info** for client to process via stage-cleared endpoint
 - Continues until no more connections exist
-- Handles RNG integration for subsequent bird connections
+- Handles RNG integration for subsequent paying connections
 
 ## API Interaction Flow
 

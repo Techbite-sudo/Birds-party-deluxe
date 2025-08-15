@@ -231,16 +231,16 @@ var BetAmountToMultiplier = map[float64]int{
 func GetLevelSpecificWeights(level Level) map[Symbol]float64 {
 	weights := make(map[Symbol]float64)
 
-	// Base weights for all levels
-	weights[SymbolPurpleOwl] = 0.2375
-	weights[SymbolGreenOwl] = 0.2375
-	weights[SymbolYellowOwl] = 0.2375
-	weights[SymbolBlueOwl] = 0.2375
-	weights[SymbolRedOwl] = 0.2375
+	// Base weights for all levels - clovers have same weight as regular birds
+	weights[SymbolPurpleOwl] = 0.19
+	weights[SymbolGreenOwl] = 0.19
+	weights[SymbolYellowOwl] = 0.19
+	weights[SymbolBlueOwl] = 0.19
+	weights[SymbolRedOwl] = 0.19
+	weights[SymbolClover] = 0.19   // CORRECTED: Clover has same weight as regular birds
 	
-	// DELUXE: Two separate special symbols
-	weights[SymbolFreeGame] = 0.05 // Rainbow egg - triggers free spins
-	weights[SymbolClover] = 0.05   // Four-leaf clover - booming reels (connection-based)
+	// DELUXE: Only rainbow egg is special symbol with low weight
+	weights[SymbolFreeGame] = 0.01 // Rainbow egg - triggers free spins (low probability)
 
 	// Add level-specific stage-cleared symbol
 	switch level {

@@ -1,0 +1,38 @@
+2025/08/15 10:44:55 Starting Birds Party Deluxe server on port 11400
+2025/08/15 10:57:53 Generating grid with win for level 1 with grid size 4x4
+2025/08/15 10:57:53 Found 0 stage-cleared symbols (orange_slice) for level 1
+2025/08/15 10:57:53 Settings request: {"client_id":"279","game_id":"46","player_id":"284"}
+2025/08/15 10:57:54 ✅IP: 127.0.0.1
+2025/08/15 10:57:54 ✅User-Agent: PostmanRuntime/7.45.0
+2025/08/15 10:57:54 RNG request: {"client_id":"279","game_id":"46","player_id":"284","bet_id":"bet111","rtp":0.97,"payout_multiplier":5,"request_salt":"3aacf312-f869-4018-9055-aefd2cb59dc1","bet_amount":0.1,"ip_address":"127.0.0.1","user_agent":"PostmanRuntime/7.45.0"}
+2025/08/15 10:57:55 Free Spins triggered by rainbow egg, current booming reels multiplier: 1.0x
+2025/08/15 10:57:55 Spin completed: level=1, gridSize=4x4, stageClearedSymbols=0, hasStageCleared=false, cascading=true, boomingReels=1.0x, cloverConnections=0, birdConnections=1
+[2025-08-15 10:57:53] 200 - POST /spin/birdspartydeluxe
+2025/08/15 11:00:47 Starting Birds Party Deluxe server on port 11400
+2025/08/15 11:00:54 Generating grid with win for level 1 with grid size 4x4
+2025/08/15 11:00:54 Found 0 stage-cleared symbols (orange_slice) for level 1
+2025/08/15 11:00:54 Settings request: {"client_id":"279","game_id":"46","player_id":"284"}
+2025/08/15 11:00:55 ✅IP: 127.0.0.1
+2025/08/15 11:00:55 ✅User-Agent: PostmanRuntime/7.45.0
+2025/08/15 11:00:55 RNG request: {"client_id":"279","game_id":"46","player_id":"284","bet_id":"bet111","rtp":0.97,"payout_multiplier":0.5,"request_salt":"f52bf0c8-b5a6-4c78-a868-1361ff1e8024","bet_amount":0.1,"ip_address":"127.0.0.1","user_agent":"PostmanRuntime/7.45.0"}
+2025/08/15 11:00:56 Spin completed: level=1, gridSize=4x4, stageClearedSymbols=0, hasStageCleared=false, cascading=true, boomingReels=1.0x, cloverConnections=0, birdConnections=1
+[2025-08-15 11:00:53] 200 - POST /spin/birdspartydeluxe
+2025/08/15 11:01:27 Generating grid with win for level 1 with grid size 4x4
+2025/08/15 11:01:27 Found 0 stage-cleared symbols (orange_slice) for level 1
+2025/08/15 11:01:27 Settings request: {"client_id":"279","game_id":"46","player_id":"284"}
+2025/08/15 11:01:27 ✅IP: 127.0.0.1
+2025/08/15 11:01:27 ✅User-Agent: PostmanRuntime/7.45.0
+2025/08/15 11:01:27 RNG request: {"client_id":"279","game_id":"46","player_id":"284","bet_id":"bet111","rtp":0.97,"payout_multiplier":0.5,"request_salt":"1245b49c-425c-4161-b674-b316c65402df","bet_amount":0.1,"ip_address":"127.0.0.1","user_agent":"PostmanRuntime/7.45.0"}
+2025/08/15 11:01:28 Spin completed: level=1, gridSize=4x4, stageClearedSymbols=0, hasStageCleared=false, cascading=true, boomingReels=1.0x, cloverConnections=0, birdConnections=1
+[2025-08-15 11:01:27] 200 - POST /spin/birdspartydeluxe
+2025/08/15 11:01:35 Generating grid with win for level 1 with grid size 4x4
+2025/08/15 11:01:35 Found 0 stage-cleared symbols (orange_slice) for level 1
+2025/08/15 11:01:35 Settings request: {"client_id":"279","game_id":"46","player_id":"284"}
+2025/08/15 11:01:35 ✅IP: 127.0.0.1
+2025/08/15 11:01:35 ✅User-Agent: PostmanRuntime/7.45.0
+2025/08/15 11:01:35 RNG request: {"client_id":"279","game_id":"46","player_id":"284","bet_id":"bet111","rtp":0.97,"payout_multiplier":2,"request_salt":"549776f7-f4bc-4a57-a964-8f9cb4eedd27","bet_amount":0.1,"ip_address":"127.0.0.1","user_agent":"PostmanRuntime/7.45.0"}
+2025/08/15 11:01:35 RNG determined a loss outcome
+2025/08/15 11:01:35 Generating loss grid for level 1 with grid size 4x4
+2025/08/15 11:01:35 Found 0 stage-cleared symbols (orange_slice) for level 1
+2025/08/15 11:01:35 Spin completed: level=1, gridSize=4x4, stageClearedSymbols=0, hasStageCleared=false, cascading=false, boomingReels=1.0x, cloverConnections=0, birdConnections=0
+[2025-08-15 11:01:34] 200 - POST /spin/birdspartydeluxe
