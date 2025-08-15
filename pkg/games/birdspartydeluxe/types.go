@@ -245,11 +245,11 @@ func GetLevelSpecificWeights(level Level) map[Symbol]float64 {
 	// Add level-specific stage-cleared symbol
 	switch level {
 	case Level1:
-		weights[SymbolOrangeSlice] = 0.05 // For testing - should be much lower in production
+		weights[SymbolOrangeSlice] = 0.05 // For testing -0.05, for production-0.005
 	case Level2:
-		weights[SymbolHoneyPot] = 0.05 // For testing - should be much lower in production
+		weights[SymbolHoneyPot] = 0.05 // For testing -0.05, for production-0.005
 	case Level3:
-		weights[SymbolStrawberry] = 0.05 // For testing - should be much lower in production
+		weights[SymbolStrawberry] = 0.05 // For testing -0.05, for production-0.005
 	}
 
 	return weights
