@@ -87,12 +87,12 @@ type GameState struct {
 	StageProgress int        `json:"stageProgress"` // Accumulated stage-cleared symbols (0-14)
 	GameMode      string     `json:"gameMode"`      // "base" or "freeSpins"
 	FreeSpins     struct {
-		Remaining    int     `json:"remaining"`
-		TotalAwarded int     `json:"totalAwarded"`
+		Remaining    int `json:"remaining"`
+		TotalAwarded int `json:"totalAwarded"`
 		// DELUXE: Booming Reels Multiplier System
-		BoomingReelsLevel    int     `json:"boomingReelsLevel"`    // Current level in multiplier progression (0-5)
-		CurrentMultiplier    float64 `json:"currentMultiplier"`    // Current active multiplier for this cascade sequence
-		CloverConnectionsFound int   `json:"cloverConnectionsFound"` // Count of clover connections found in current cascade
+		BoomingReelsLevel      int     `json:"boomingReelsLevel"`      // Current level in multiplier progression (0-5)
+		CurrentMultiplier      float64 `json:"currentMultiplier"`      // Current active multiplier for this cascade sequence
+		CloverConnectionsFound int     `json:"cloverConnectionsFound"` // Count of clover connections found in current cascade
 	} `json:"freeSpins"`
 	TotalWin        float64      `json:"totalWin"`
 	Cascading       bool         `json:"cascading"`
@@ -231,26 +231,28 @@ var BetAmountToMultiplier = map[float64]int{
 func GetLevelSpecificWeights(level Level) map[Symbol]float64 {
 	weights := make(map[Symbol]float64)
 
-	// Base weights for all levels - clovers have same weight as regular birds
-	weights[SymbolPurpleOwl] = 0.19
-	weights[SymbolGreenOwl] = 0.19
-	weights[SymbolYellowOwl] = 0.19
-	weights[SymbolBlueOwl] = 0.19
-	weights[SymbolRedOwl] = 0.19
-	weights[SymbolClover] = 0.19   // CORRECTED: Clover has same weight as regular birds
-	
-	// DELUXE: Only rainbow egg is special symbol with low weight
-	weights[SymbolFreeGame] = 0.01 // Rainbow egg - triggers free spins (low probability)
+	// Base weights for all levels - INCREASED CLOVER APPEARANCE
+	weights[SymbolPurpleOwl] = 0.15
+	weights[SymbolGreenOwl] = 0.15
+	weights[SymbolYellowOwl] = 0.15
+	weights[SymbolBlueOwl] = 0.15
+	weights[SymbolRedOwl] = 0.15
 
-	// Add level-specific stage-cleared symbol
+	// Level-specific clover weights - INCREASED APPEARANCE PER LEVEL
 	switch level {
 	case Level1:
-		weights[SymbolOrangeSlice] = 0.05 // For testing -0.05, for production-0.005
+		weights[SymbolClover] = 0.15       // Level 1: 25% chance
+		weights[SymbolOrangeSlice] = 0.002 // For testing -0.05, for production-0.005
 	case Level2:
+		weights[SymbolClover] = 0.30   // Level 2: 30% chance (increased)
 		weights[SymbolHoneyPot] = 0.05 // For testing -0.05, for production-0.005
 	case Level3:
+		weights[SymbolClover] = 0.35     // Level 3: 35% chance (highest)
 		weights[SymbolStrawberry] = 0.05 // For testing -0.05, for production-0.005
 	}
+
+	// DELUXE: Only rainbow egg is special symbol with low weight
+	weights[SymbolFreeGame] = 0.01 // Rainbow egg - triggers free spins (low probability)
 
 	return weights
 }
@@ -264,7 +266,7 @@ var PaytableLevel1 = map[Symbol]map[int]float64{
 	SymbolBlueOwl:   {4: 10, 5: 30, 6: 50, 7: 60, 8: 100, 9: 750, 10: 1000, 11: 10000, 12: 20000, 13: 50000, 14: 60000, 15: 60000, 16: 60000},
 	SymbolRedOwl:    {4: 20, 5: 50, 6: 100, 7: 500, 8: 1000, 9: 2000, 10: 5000, 11: 20000, 12: 50000, 13: 60000, 14: 80000, 15: 80000, 16: 80000},
 	// DELUXE: Clover symbols have same payouts as purple owl (lowest paying)
-	SymbolClover:    {4: 2, 5: 4, 6: 5, 7: 8, 8: 10, 9: 20, 10: 30, 11: 50, 12: 100, 13: 200, 14: 400, 15: 400, 16: 400},
+	SymbolClover: {4: 2, 5: 4, 6: 5, 7: 8, 8: 10, 9: 20, 10: 30, 11: 50, 12: 100, 13: 200, 14: 400, 15: 400, 16: 400},
 }
 
 // Level 2 Paytable (5x5 grid, supports 5-25 connected symbols)
@@ -275,7 +277,7 @@ var PaytableLevel2 = map[Symbol]map[int]float64{
 	SymbolBlueOwl:   {5: 10, 6: 30, 7: 50, 8: 60, 9: 100, 10: 750, 11: 1000, 12: 10000, 13: 20000, 14: 50000, 15: 70000, 16: 70000, 17: 70000, 18: 70000, 19: 70000, 20: 70000, 21: 70000, 22: 70000, 23: 70000, 24: 70000, 25: 70000},
 	SymbolRedOwl:    {5: 20, 6: 50, 7: 100, 8: 500, 9: 1000, 10: 2000, 11: 5000, 12: 20000, 13: 50000, 14: 80000, 15: 100000, 16: 100000, 17: 100000, 18: 100000, 19: 100000, 20: 100000, 21: 100000, 22: 100000, 23: 100000, 24: 100000, 25: 100000},
 	// DELUXE: Clover symbols have same payouts as purple owl (lowest paying)
-	SymbolClover:    {5: 2, 6: 4, 7: 5, 8: 8, 9: 10, 10: 20, 11: 30, 12: 50, 13: 100, 14: 200, 15: 450, 16: 450, 17: 450, 18: 450, 19: 450, 20: 450, 21: 450, 22: 450, 23: 450, 24: 450, 25: 450},
+	SymbolClover: {5: 2, 6: 4, 7: 5, 8: 8, 9: 10, 10: 20, 11: 30, 12: 50, 13: 100, 14: 200, 15: 450, 16: 450, 17: 450, 18: 450, 19: 450, 20: 450, 21: 450, 22: 450, 23: 450, 24: 450, 25: 450},
 }
 
 // Level 3 Paytable (6x6 grid, supports 6-36 connected symbols)
@@ -286,7 +288,7 @@ var PaytableLevel3 = map[Symbol]map[int]float64{
 	SymbolBlueOwl:   {6: 10, 7: 30, 8: 50, 9: 60, 10: 100, 11: 750, 12: 1000, 13: 10000, 14: 20000, 15: 50000, 16: 80000, 17: 80000, 18: 80000, 19: 80000, 20: 80000, 21: 80000, 22: 80000, 23: 80000, 24: 80000, 25: 80000, 26: 80000, 27: 80000, 28: 80000, 29: 80000, 30: 80000, 31: 80000, 32: 80000, 33: 80000, 34: 80000, 35: 80000, 36: 80000},
 	SymbolRedOwl:    {6: 20, 7: 50, 8: 100, 9: 500, 10: 1000, 11: 2000, 12: 5000, 13: 20000, 14: 50000, 15: 100000, 16: 100000, 17: 100000, 18: 100000, 19: 100000, 20: 100000, 21: 100000, 22: 100000, 23: 100000, 24: 100000, 25: 100000, 26: 100000, 27: 100000, 28: 100000, 29: 100000, 30: 100000, 31: 100000, 32: 100000, 33: 100000, 34: 100000, 35: 100000, 36: 100000},
 	// DELUXE: Clover symbols have same payouts as purple owl (lowest paying)
-	SymbolClover:    {6: 2, 7: 4, 8: 5, 9: 8, 10: 10, 11: 20, 12: 30, 13: 50, 14: 100, 15: 200, 16: 500, 17: 500, 18: 500, 19: 500, 20: 500, 21: 500, 22: 500, 23: 500, 24: 500, 25: 500, 26: 500, 27: 500, 28: 500, 29: 500, 30: 500, 31: 500, 32: 500, 33: 500, 34: 500, 35: 500, 36: 500},
+	SymbolClover: {6: 2, 7: 4, 8: 5, 9: 8, 10: 10, 11: 20, 12: 30, 13: 50, 14: 100, 15: 200, 16: 500, 17: 500, 18: 500, 19: 500, 20: 500, 21: 500, 22: 500, 23: 500, 24: 500, 25: 500, 26: 500, 27: 500, 28: 500, 29: 500, 30: 500, 31: 500, 32: 500, 33: 500, 34: 500, 35: 500, 36: 500},
 }
 
 // GetPaytable returns the appropriate paytable for the given level

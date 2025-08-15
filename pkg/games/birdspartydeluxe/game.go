@@ -36,7 +36,19 @@ func WeightedRandomSymbol(level Level, r *rand.Rand) Symbol {
 func hasSpecialSymbol(grid [][]string) bool {
 	for y := range grid {
 		for x := range grid[y] {
-			if grid[y][x] == string(SymbolFreeGame) || grid[y][x] == string(SymbolClover) {
+			if grid[y][x] == string(SymbolFreeGame) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Helper: Checks if free game symbols are already present in the grid (clovers are now allowed multiple times)
+func hasFreeGameSymbol(grid [][]string) bool {
+	for y := range grid {
+		for x := range grid[y] {
+			if grid[y][x] == string(SymbolFreeGame) {
 				return true
 			}
 		}
@@ -68,20 +80,20 @@ func WeightedRandomSymbolWithControl(level Level, r *rand.Rand, forbidSpecialSym
 	return SymbolPurpleOwl // Fallback
 }
 
-// DELUXE: GenerateGrid - Modified to allow both free_game and clover symbols
+// DELUXE: GenerateGrid - Modified to allow multiple clovers but limit free game symbols
 func GenerateGrid(level Level, r *rand.Rand, gameMode string) [][]string {
 	gridSize := level.GetGridSize()
 	grid := make([][]string, gridSize)
-	specialSymbolPlaced := false
-	
+	freeGameSymbolPlaced := false
+
 	for y := 0; y < gridSize; y++ {
 		grid[y] = make([]string, gridSize)
 		for x := 0; x < gridSize; x++ {
-			// DELUXE: Allow both special symbols, but limit to one per grid
-			allowSpecialSymbols := !specialSymbolPlaced
-			symbol := WeightedRandomSymbolWithControl(level, r, !allowSpecialSymbols)
-			if symbol == SymbolFreeGame || symbol == SymbolClover {
-				specialSymbolPlaced = true
+			// DELUXE: Allow multiple clovers, but limit free game symbols to one per grid
+			allowFreeGameSymbols := !freeGameSymbolPlaced
+			symbol := WeightedRandomSymbolWithControl(level, r, !allowFreeGameSymbols)
+			if symbol == SymbolFreeGame {
+				freeGameSymbolPlaced = true
 			}
 			grid[y][x] = string(symbol)
 		}
@@ -133,9 +145,18 @@ func ForceWinGrid(level Level, r *rand.Rand, gameMode string) [][]string {
 	grid := GenerateGrid(level, r, gameMode)
 	minConnection := level.GetMinConnection()
 
-	// Pick a random connection-forming symbol (birds or clover)
-	connectionSymbols := []Symbol{SymbolPurpleOwl, SymbolGreenOwl, SymbolYellowOwl, SymbolBlueOwl, SymbolRedOwl, SymbolClover}
-	targetSymbol := connectionSymbols[r.Intn(len(connectionSymbols))]
+	// INCREASED CLOVER APPEARANCE: 40% chance to force clover connections for Booming Reels
+	forceClover := r.Float64() < 0.4
+	var targetSymbol Symbol
+
+	if forceClover {
+		targetSymbol = SymbolClover
+		log.Printf("Forcing clover connection for Booming Reels feature")
+	} else {
+		// Pick a random connection-forming symbol (birds or clover)
+		connectionSymbols := []Symbol{SymbolPurpleOwl, SymbolGreenOwl, SymbolYellowOwl, SymbolBlueOwl, SymbolRedOwl, SymbolClover}
+		targetSymbol = connectionSymbols[r.Intn(len(connectionSymbols))]
+	}
 
 	// Create a horizontal line of the minimum required length
 	startX := r.Intn(gridSize - minConnection + 1)
@@ -280,8 +301,20 @@ func ApplyGravitySurgical(grid [][]string, stageClearedSymbols []StageClearedSym
 
 			// Fill empty spaces at the top with new symbols
 			for y := 0; y <= writePos; y++ {
-				allowSpecialSymbols := !hasSpecialSymbol(grid)
-				grid[y][x] = string(WeightedRandomSymbolWithControl(level, r, !allowSpecialSymbols))
+				allowFreeGameSymbols := !hasFreeGameSymbol(grid)
+
+				// INCREASED CLOVER APPEARANCE: 30% chance to force clover during gravity for Booming Reels
+				forceClover := r.Float64() < 0.3
+				var newSymbol Symbol
+
+				if forceClover && allowFreeGameSymbols {
+					newSymbol = SymbolClover
+					log.Printf("Forcing clover at position (%d,%d) during gravity for Booming Reels", x, y)
+				} else {
+					newSymbol = WeightedRandomSymbolWithControl(level, r, !allowFreeGameSymbols)
+				}
+
+				grid[y][x] = string(newSymbol)
 				log.Printf("Generated new symbol %s at position (%d,%d) after surgical gravity", grid[y][x], x, y)
 				newPositions = append(newPositions, Position{X: x, Y: y})
 			}
@@ -382,7 +415,7 @@ func RemoveConnectionsSurgical(grid [][]string, connections []Connection) []Posi
 	return affectedPositions
 }
 
-// DELUXE: ApplyGravitySurgicalForCascade - Modified to accept game mode
+// DELUXE: ApplyGravitySurgicalForCascade - Modified to accept game mode and increase clover appearance
 func ApplyGravitySurgicalForCascade(grid [][]string, affectedPositions []Position, level Level, r *rand.Rand, gameMode string) []Position {
 	gridSize := len(grid)
 	var newPositions []Position
@@ -413,8 +446,20 @@ func ApplyGravitySurgicalForCascade(grid [][]string, affectedPositions []Positio
 
 			// Fill empty spaces at the top with new symbols
 			for y := 0; y <= writePos; y++ {
-				allowSpecialSymbols := !hasSpecialSymbol(grid)
-				grid[y][x] = string(WeightedRandomSymbolWithControl(level, r, !allowSpecialSymbols))
+				allowFreeGameSymbols := !hasFreeGameSymbol(grid)
+
+				// INCREASED CLOVER APPEARANCE: 50% chance to force clover during cascades for Booming Reels
+				forceClover := r.Float64() < 0.5
+				var newSymbol Symbol
+
+				if forceClover && allowFreeGameSymbols {
+					newSymbol = SymbolClover
+					log.Printf("Forcing clover at position (%d,%d) during cascade for Booming Reels", x, y)
+				} else {
+					newSymbol = WeightedRandomSymbolWithControl(level, r, !allowFreeGameSymbols)
+				}
+
+				grid[y][x] = string(newSymbol)
 				log.Printf("Generated new symbol %s at position (%d,%d) after cascade gravity", grid[y][x], x, y)
 				newPositions = append(newPositions, Position{X: x, Y: y})
 			}
@@ -653,16 +698,16 @@ func InitializeGameState() GameState {
 		StageProgress: 0,
 		GameMode:      "base",
 		FreeSpins: struct {
-			Remaining            int     `json:"remaining"`
-			TotalAwarded         int     `json:"totalAwarded"`
-			BoomingReelsLevel    int     `json:"boomingReelsLevel"`
-			CurrentMultiplier    float64 `json:"currentMultiplier"`
-			CloverConnectionsFound int   `json:"cloverConnectionsFound"`
+			Remaining              int     `json:"remaining"`
+			TotalAwarded           int     `json:"totalAwarded"`
+			BoomingReelsLevel      int     `json:"boomingReelsLevel"`
+			CurrentMultiplier      float64 `json:"currentMultiplier"`
+			CloverConnectionsFound int     `json:"cloverConnectionsFound"`
 		}{
-			Remaining:            0,
-			TotalAwarded:         0,
-			BoomingReelsLevel:    0,     // Start at level 0 (1x multiplier)
-			CurrentMultiplier:    1.0,   // Start with 1x multiplier
+			Remaining:              0,
+			TotalAwarded:           0,
+			BoomingReelsLevel:      0,   // Start at level 0 (1x multiplier)
+			CurrentMultiplier:      1.0, // Start with 1x multiplier
 			CloverConnectionsFound: 0,   // Track clover connections found
 		},
 		TotalWin:            0,
