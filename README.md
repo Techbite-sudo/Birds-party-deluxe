@@ -47,17 +47,17 @@ This document provides comprehensive guidelines for integrating the Birds Party 
 1. **Clovers form connections** like regular bird symbols (minimum 4/5/6 depending on level)
 2. **When clovers form valid connections**:
    - They **upgrade the booming reels multiplier** (1x → 2x → 3x → 4x → 5x → 10x)
-   - They **pay out according to paytable** (same as Purple Owl payouts)
-   - Their **payout uses the NEW upgraded multiplier**
+   - They **pay base value only** (same as Purple Owl payouts, NO multiplier applied)
+   - **They do NOT use the multiplier for their own payouts**
 3. **Subsequent bird connections** in the same cascade sequence use the upgraded multiplier
 4. **Multiplier resets** when cascade sequence ends (no more connections)
 
 #### Multiplier Progression Example
 ```
 Initial: 1x multiplier
-Clover connection found (4 symbols) → Upgrade to 2x → Clover pays: base_payout × 2x
+Clover connection found (4 symbols) → Upgrade to 2x → Clover pays: base_payout (no multiplier)
 Bird connection found (5 symbols) → Bird pays: base_payout × 2x  
-Another clover connection → Upgrade to 3x → Clover pays: base_payout × 3x
+Another clover connection → Upgrade to 3x → Clover pays: base_payout (no multiplier)
 Bird connection pays: base_payout × 3x
 No more connections → Reset to 1x for next spin
 ```
@@ -198,7 +198,7 @@ POST /spin/birdspartydeluxe
           {"x": 1, "y": 0}, {"x": 1, "y": 1}, {"x": 2, "y": 1}, {"x": 1, "y": 2}
         ],
         "count": 4,
-        "payout": 0.0
+        "payout": 0.02
       },
       {
         "symbol": "yellow_owl", 
@@ -424,7 +424,7 @@ POST /cascade/birdspartydeluxe
 4. **Rainbow Egg vs Clover**: Test separate handling of special symbols
 5. **No Free Spin Re-trigger**: Verify rainbow eggs don't re-trigger during free spins
 6. **Bird Connection Multipliers**: Verify bird payouts use current multiplier
-7. **Clover Connection Payouts**: Verify clovers don't pay, only upgrade multiplier
+7. **Clover Connection Payouts**: Verify clovers pay base value only (no multiplier applied)
 8. **Stage-Cleared During Free Spins**: Test level progression continues
 9. **Level Advancement with Multiplier**: Test multiplier preservation during level up
 10. **Complex Cascade Sequences**: Test multiple clover upgrades in one sequence
@@ -446,11 +446,13 @@ Starting DELUXE cascade sequence
 Reset booming reels to 1.0x for new spin
 Processing clover connections: 1 found
 Booming reels upgraded to 2.0x
+Clover pays base value only (no multiplier)
 Processing bird connections: 2 found  
 Bird payouts calculated with 2.0x multiplier
 Processing cascade #1
 Found 1 clover connection
 Booming reels upgraded to 3.0x
+Clover pays base value only (no multiplier)
 Found 2 bird connections
 Bird payouts calculated with 3.0x multiplier
 Processing cascade #2
@@ -467,6 +469,7 @@ Stage-cleared processing: 4 symbols
 Level advanced from 1 to 2, grid: 5x5
 Found 1 clover connection on new level
 Booming reels upgraded to 4.0x
+Clover pays base value only (no multiplier)
 Found 1 bird connection on new level
 Bird payout calculated with 4.0x multiplier
 DELUXE level advancement completed
@@ -477,7 +480,7 @@ DELUXE level advancement completed
 ### 1. Connection-Based Clover System
 - **Clover Connection Detection**: Clovers must form valid connections (4/5/6+ symbols)
 - **Multiplier Upgrade Logic**: Each clover connection upgrades booming reels
-- **Payout Separation**: Clovers upgrade multiplier, birds receive payouts
+- **Payout Separation**: Clovers pay base value only (no multiplier), birds receive multiplied payouts
 - **RNG Integration**: Only bird connections validated by RNG
 
 ### 2. Progressive Booming Reels
@@ -491,6 +494,7 @@ DELUXE level advancement completed
 - **Connection-Forming Logic**: Birds and clovers can form connections
 - **Stage-Cleared Priority**: Stage-cleared symbols processed first
 - **Free Spin Mechanics**: No re-triggering during bonus rounds
+- **Clover Payout Logic**: Clovers pay base value only, never use multiplier
 
 ### 4. Architectural Benefits
 - **Maintainable Code**: Each endpoint has clear, distinct responsibilities
@@ -507,19 +511,19 @@ Spin (1x) → Cascade (bird connections only) → Cascade (more birds) → End
 
 ### Pattern 2: Clover Progression Flow
 ```
-Spin (1x) → Clover connection (2x) → Cascade (birds at 2x) → Clover (3x) → Birds (3x) → End
+Spin (1x) → Clover connection (2x, pays base) → Cascade (birds at 2x) → Clover (3x, pays base) → Birds (3x) → End
 ```
 
 ### Pattern 3: Complex Mixed Flow with Level Up
 ```
-Spin (1x) → Clover (2x) → Process-Stage-Cleared (level up) → 
-Clover (3x) → Cascade (birds at 3x) → End
+Spin (1x) → Clover (2x, pays base) → Process-Stage-Cleared (level up) → 
+Clover (3x, pays base) → Cascade (birds at 3x) → End
 ```
 
 ### Pattern 4: Maximum Multiplier Flow
 ```
-Spin (1x) → Clover (2x) → Clover (3x) → Clover (4x) → Clover (5x) → 
-Clover (10x) → Cascade (birds at 10x) → End
+Spin (1x) → Clover (2x, pays base) → Clover (3x, pays base) → Clover (4x, pays base) → Clover (5x, pays base) → 
+Clover (10x, pays base) → Cascade (birds at 10x) → End
 ```
 
 ## Implementation Notes
@@ -539,7 +543,8 @@ Clover (10x) → Cascade (birds at 10x) → End
 1. **Connection Detection**: Ensure clovers form valid connections before upgrading
 2. **Multiplier Tracking**: Maintain accurate multiplier throughout cascade sequences
 3. **Symbol Separation**: Never mix clover upgrades with bird payouts
-4. **Reset Timing**: Properly reset multiplier when cascade sequences end
-5. **Visual Clarity**: Clear indication of booming reels progression for players
+4. **Clover Payout Logic**: Clovers must pay base value only, never use multiplier
+5. **Reset Timing**: Properly reset multiplier when cascade sequences end
+6. **Visual Clarity**: Clear indication of booming reels progression for players
 
 This DELUXE implementation provides a sophisticated, engaging slot game experience with progressive multiplier mechanics that reward players for finding clover connections while maintaining the core Birds Party gameplay that players love!
