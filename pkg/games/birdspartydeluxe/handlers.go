@@ -67,17 +67,17 @@ func (rg *RouteGroup) SpinHandler(c *fiber.Ctx) error {
 	allConnections := FindAllConnections(req.GameState.Grid, req.GameState.CurrentLevel)
 	cloverConnections, birdConnections := SeparateConnections(allConnections)
 
-	// DELUXE: Process clover connections first - they upgrade multiplier AND pay out
+	// DELUXE: Process clover connections first - they upgrade multiplier but pay base value only
 	totalWinnings := 0.0
 	for i, cloverConnection := range cloverConnections {
 		// Upgrade multiplier first
 		UpgradeBoomingReels(&req.GameState)
-		log.Printf("Clover connection found (%d symbols), multiplier upgraded to %.1fx", 
+		log.Printf("Clover connection found (%d symbols), multiplier upgraded to %.1fx",
 			cloverConnection.Count, req.GameState.FreeSpins.CurrentMultiplier)
-		
-		// Calculate clover payout using the NEW upgraded multiplier
+
+		// Calculate clover payout - BASE VALUE ONLY, NO MULTIPLIER
 		payout := calculatePayout(cloverConnection.Symbol, cloverConnection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
-		payout *= req.GameState.FreeSpins.CurrentMultiplier
+		// Clovers pay base value only - no booming reels multiplier applied
 		cloverConnections[i].Payout = payout
 		totalWinnings += payout
 	}
@@ -85,7 +85,7 @@ func (rg *RouteGroup) SpinHandler(c *fiber.Ctx) error {
 	// Calculate total winnings from bird connections using current multiplier
 	for i, connection := range birdConnections {
 		payout := calculatePayout(connection.Symbol, connection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
-		// Apply booming reels multiplier
+		// Apply booming reels multiplier to bird connections
 		payout *= req.GameState.FreeSpins.CurrentMultiplier
 		birdConnections[i].Payout = payout
 		totalWinnings += payout
@@ -134,7 +134,7 @@ func (rg *RouteGroup) SpinHandler(c *fiber.Ctx) error {
 			cloverConnections = nil
 			birdConnections = nil
 			totalWinnings = 0
-			
+
 			// Reset booming reels since we regenerated the grid
 			ResetBoomingReels(&req.GameState)
 		}
@@ -284,17 +284,17 @@ func (rg *RouteGroup) ProcessStageClearedHandler(c *fiber.Ctx) error {
 			stageClearedSymbolsAfterLevelUp := FindStageClearedSymbols(req.GameState.Grid, req.GameState.CurrentLevel)
 			req.GameState.StageClearedSymbols = stageClearedSymbolsAfterLevelUp
 
-			// DELUXE: Process clover connections first - upgrade multiplier AND pay out
+			// DELUXE: Process clover connections first - upgrade multiplier but pay base value only
 			totalWinnings := 0.0
 			for i, cloverConnection := range cloverConnections {
 				// Upgrade multiplier first
 				UpgradeBoomingReels(&req.GameState)
-				log.Printf("Clover connection found on new level (%d symbols), multiplier upgraded to %.1fx", 
+				log.Printf("Clover connection found on new level (%d symbols), multiplier upgraded to %.1fx",
 					cloverConnection.Count, req.GameState.FreeSpins.CurrentMultiplier)
-				
-				// Calculate clover payout using the NEW upgraded multiplier
+
+				// Calculate clover payout - BASE VALUE ONLY, NO MULTIPLIER
 				payout := calculatePayout(cloverConnection.Symbol, cloverConnection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
-				payout *= req.GameState.FreeSpins.CurrentMultiplier
+				// Clovers pay base value only - no booming reels multiplier applied
 				cloverConnections[i].Payout = payout
 				totalWinnings += payout
 			}
@@ -342,17 +342,17 @@ func (rg *RouteGroup) ProcessStageClearedHandler(c *fiber.Ctx) error {
 	allConnections := FindAllConnections(req.GameState.Grid, req.GameState.CurrentLevel)
 	cloverConnections, birdConnections := SeparateConnections(allConnections)
 
-	// DELUXE: Process clover connections first - upgrade multiplier AND pay out
+	// DELUXE: Process clover connections first - upgrade multiplier but pay base value only
 	totalWinnings := 0.0
 	for i, cloverConnection := range cloverConnections {
 		// Upgrade multiplier first
 		UpgradeBoomingReels(&req.GameState)
-		log.Printf("Clover connection found after stage-cleared processing (%d symbols), multiplier upgraded to %.1fx", 
+		log.Printf("Clover connection found after stage-cleared processing (%d symbols), multiplier upgraded to %.1fx",
 			cloverConnection.Count, req.GameState.FreeSpins.CurrentMultiplier)
-		
-		// Calculate clover payout using the NEW upgraded multiplier
+
+		// Calculate clover payout - BASE VALUE ONLY, NO MULTIPLIER
 		payout := calculatePayout(cloverConnection.Symbol, cloverConnection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
-		payout *= req.GameState.FreeSpins.CurrentMultiplier
+		// Clovers pay base value only - no booming reels multiplier applied
 		cloverConnections[i].Payout = payout
 		totalWinnings += payout
 	}
@@ -360,6 +360,7 @@ func (rg *RouteGroup) ProcessStageClearedHandler(c *fiber.Ctx) error {
 	// Calculate total winnings from bird connections using current multiplier
 	for i, connection := range birdConnections {
 		payout := calculatePayout(connection.Symbol, connection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
+		// Apply booming reels multiplier to bird connections
 		payout *= req.GameState.FreeSpins.CurrentMultiplier
 		birdConnections[i].Payout = payout
 		totalWinnings += payout
@@ -412,8 +413,12 @@ func (rg *RouteGroup) ProcessStageClearedHandler(c *fiber.Ctx) error {
 				// Surgical loss successful - remove ALL paying connections but keep multiplier upgrades
 				cloverConnections = nil
 				birdConnections = nil
+				allConnections = nil // IMPORTANT: Clear allConnections when surgical loss is successful
 				totalWinnings = 0
 				log.Printf("Surgical loss applied successfully after stage-cleared processing (all paying connections)")
+
+				// IMPORTANT: Re-find connections in the modified grid to ensure consistency
+				allConnections = FindAllConnections(req.GameState.Grid, req.GameState.CurrentLevel)
 			}
 		}
 	}
@@ -530,17 +535,17 @@ func (rg *RouteGroup) CascadeHandler(c *fiber.Ctx) error {
 	// DELUXE: Separate clover and bird connections
 	cloverConnections, birdConnections = SeparateConnections(allConnections)
 
-	// DELUXE: Process clover connections first - upgrade multiplier AND pay out
+	// DELUXE: Process clover connections first - upgrade multiplier but pay base value only
 	totalWinnings = 0.0
 	for i, cloverConnection := range cloverConnections {
 		// Upgrade multiplier first
 		UpgradeBoomingReels(&req.GameState)
-		log.Printf("Clover connection found in cascade (%d symbols), multiplier upgraded to %.1fx", 
+		log.Printf("Clover connection found in cascade (%d symbols), multiplier upgraded to %.1fx",
 			cloverConnection.Count, req.GameState.FreeSpins.CurrentMultiplier)
-		
-		// Calculate clover payout using the NEW upgraded multiplier
+
+		// Calculate clover payout - BASE VALUE ONLY, NO MULTIPLIER
 		payout := calculatePayout(cloverConnection.Symbol, cloverConnection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
-		payout *= req.GameState.FreeSpins.CurrentMultiplier
+		// Clovers pay base value only - no booming reels multiplier applied
 		cloverConnections[i].Payout = payout
 		totalWinnings += payout
 	}
@@ -548,6 +553,7 @@ func (rg *RouteGroup) CascadeHandler(c *fiber.Ctx) error {
 	// Calculate total winnings from bird connections using current multiplier
 	for i, connection := range birdConnections {
 		payout := calculatePayout(connection.Symbol, connection.Count, req.GameState.CurrentLevel, req.GameState.Bet.Multiplier)
+		// Apply booming reels multiplier to bird connections
 		payout *= req.GameState.FreeSpins.CurrentMultiplier
 		birdConnections[i].Payout = payout
 		totalWinnings += payout
@@ -603,8 +609,12 @@ func (rg *RouteGroup) CascadeHandler(c *fiber.Ctx) error {
 				// Surgical loss successful - remove ALL paying connections but keep multiplier upgrades
 				cloverConnections = nil
 				birdConnections = nil
+				allConnections = nil // IMPORTANT: Clear allConnections when surgical loss is successful
 				totalWinnings = 0
 				log.Printf("Surgical loss applied successfully after cascade processing (all paying connections)")
+
+				// IMPORTANT: Re-find connections in the modified grid to ensure consistency
+				allConnections = FindAllConnections(req.GameState.Grid, req.GameState.CurrentLevel)
 			}
 		}
 	}
