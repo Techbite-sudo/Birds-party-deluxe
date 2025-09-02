@@ -111,7 +111,7 @@ func (rg *RouteGroup) SpinHandler(c *fiber.Ctx) error {
 
 		log.Printf("✅IP: %v", ip)
 		log.Printf("✅User-Agent: %v", userAgent)
-		rngResp, err := rngClient.GetOutcome(req.ClientID, req.GameID, req.PlayerID, req.BetID, rtp, payoutMultiplier, req.GameState.Bet.Amount, ip, userAgent)
+		rngResp, err := rngClient.GetOutcome(req.ClientID, req.GameID, req.PlayerID, req.BetID, rtp, payoutMultiplier, req.GameState.Bet.Amount, ip, userAgent, false)
 		if err != nil {
 			log.Printf("Failed to call RNG API: %v", err)
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -387,7 +387,7 @@ func (rg *RouteGroup) ProcessStageClearedHandler(c *fiber.Ctx) error {
 
 		log.Printf("✅IP: %v", ip)
 		log.Printf("✅User-Agent: %v", userAgent)
-		rngResp, err := rngClient.GetOutcome(req.ClientID, req.GameID, req.PlayerID, req.BetID, rtp, payoutMultiplier, req.GameState.Bet.Amount, ip, userAgent)
+		rngResp, err := rngClient.GetOutcome(req.ClientID, req.GameID, req.PlayerID, req.BetID, rtp, payoutMultiplier, req.GameState.Bet.Amount, ip, userAgent, false)
 		if err != nil {
 			log.Printf("Failed to call RNG API: %v", err)
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -580,7 +580,7 @@ func (rg *RouteGroup) CascadeHandler(c *fiber.Ctx) error {
 
 		log.Printf("✅IP: %v", ip)
 		log.Printf("✅User-Agent: %v", userAgent)
-		rngResp, err := rngClient.GetOutcome(req.ClientID, req.GameID, req.PlayerID, req.BetID, rtp, payoutMultiplier, req.GameState.Bet.Amount, ip, userAgent)
+		rngResp, err := rngClient.GetOutcome(req.ClientID, req.GameID, req.PlayerID, req.BetID, rtp, payoutMultiplier, req.GameState.Bet.Amount, ip, userAgent, false)
 		if err != nil {
 			log.Printf("Failed to call RNG API: %v", err)
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -690,14 +690,14 @@ func validateRequest(clientID, gameID, playerID, betID string, betAmount float64
 		return fmt.Errorf("bet_id is required")
 	}
 	if !isValidBetAmount(betAmount) {
-		return fmt.Errorf("invalid bet amount, allowed values are 0.1, 0.2, 0.3, 0.5, 1.0")
+		return fmt.Errorf("invalid bet amount, allowed values are 0.1, 0.2, 0.3, 0.5, 1.0, 2.0, 2.5")
 	}
 	return nil
 }
 
 // isValidBetAmount checks if the bet amount is valid
 func isValidBetAmount(amount float64) bool {
-	validAmounts := []float64{0.1, 0.2, 0.3, 0.5, 1.0}
+	validAmounts := []float64{0.1, 0.2, 0.3, 0.5, 1.0, 2.0, 2.5}
 	for _, valid := range validAmounts {
 		if amount == valid {
 			return true
